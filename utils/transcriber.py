@@ -12,8 +12,8 @@ def transcribe_episode(episode_path):
     for segment in result["segments"]:
         sentences.append({
             "text": segment["text"],
-            "start_time": segment["start"],
-            "end_time": segment["end"]
+            "start_time": segment["start"] - 0.1,  # Add a buffer to the start time
+            "end_time": segment["end"] + 0.1,  # Add a buffer to the end time
         })
 
     return sentences

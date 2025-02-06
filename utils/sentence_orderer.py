@@ -1,33 +1,34 @@
-import re
-from collections import defaultdict
+import fugashi
+
+tagger = fugashi.Tagger()
 
 
 def extract_words(sentence):
-    """Extracts words from a sentence using basic tokenization."""
-    sentence = re.sub(r'[^\w\sぁ-んァ-ン一-龥]', '', sentence)  # Remove punctuation
-    return sentence.split()  # Basic splitting (better with MeCab)
+    """Extracts unique words from a Japanese sentence using a tokenizer."""
+    return set(w.surface for w in tagger(sentence))
 
 
 def order_sentences(sentences):
     """
-    Orders sentences using the +1 word learning method:
-    - Starts with the simplest sentence (fewest new words).
-    - Introduces only 1 new word per sentence when possible.
+    Orders sentences to introduce the least amount of new words at a time.
+    Uses a greedy algorithm to ensure smooth learning progression.
     """
-    ordered = []
-    learned_words = set()
+    known_words = set()
+    ordered_sentences = []
 
-    while sentences:
-        # Find the best next sentence (fewest new words)
-        best_sentence = min(sentences, key=lambda s: sum(1 for w in extract_words(s["text"]) if w not in learned_words))
+    # Convert sentences into tuples of (original_sentence, extracted_words)
+    sentence_word_pairs = [(sentence, extract_words(sentence["text"])) for sentence in sentences]
 
-        # Add to ordered list
-        ordered.append(best_sentence)
+    # Sort sentences based on the number of already known words
+    while sentence_word_pairs:
+        # Pick the sentence with the fewest new words (most overlap with known_words)
+        best_sentence = min(sentence_word_pairs, key=lambda x: len(x[1] - known_words))
 
-        # Mark words as learned
-        learned_words.update(extract_words(best_sentence["text"]))
+        # Add sentence to ordered list and update known words
+        ordered_sentences.append(best_sentence[0])
+        known_words.update(best_sentence[1])
 
-        # Remove from list
-        sentences.remove(best_sentence)
+        # Remove the selected sentence from the list
+        sentence_word_pairs.remove(best_sentence)
 
-    return ordered
+    return ordered_sentences
