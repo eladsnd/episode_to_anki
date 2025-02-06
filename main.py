@@ -1,3 +1,5 @@
+import os
+
 from tqdm import tqdm
 import config
 
@@ -10,6 +12,8 @@ from utils.translator import translate_text
 from utils.csv_writer import save_to_csv
 from utils.transliterator import convert_to_romanji, convert_to_kana
 
+# Extract the base episode name (without extension)
+EPISODE_NAME = os.path.splitext(os.path.basename(config.EPISODE_FILE))[0]
 
 def process_episode():
     """Processes an episode and extracts data for Anki flashcards."""
@@ -23,8 +27,9 @@ def process_episode():
 
     data = []
     for i, sentence in tqdm(enumerate(ordered_sentences), total=len(ordered_sentences), desc="Processing Sentences"):
-        audio_file = extract_audio_clip(config.EPISODE_FILE, sentence["start_time"], sentence["end_time"], i)
-        image_file = extract_image_frame(config.EPISODE_FILE, (sentence["start_time"] + sentence["end_time"]) / 2, i)
+        # Generate filenames with the episode prefix
+        audio_file = extract_audio_clip(config.EPISODE_FILE, sentence["start_time"], sentence["end_time"], f"{EPISODE_NAME}_audio_{i}")
+        image_file = extract_image_frame(config.EPISODE_FILE, (sentence["start_time"] + sentence["end_time"]) / 2, f"{EPISODE_NAME}_image_{i}")
 
         translation = translate_text(sentence["text"])
         new_words = ", ".join(extract_words(sentence["text"]))
@@ -37,8 +42,8 @@ def process_episode():
         data.append([sentence["text"], romanji, kana, audio_file, image_file, translation, new_words])
 
     print("📄 Saving CSV...")
-    save_to_csv(data, columns=["Sentence", "Romanji", "Kana", "Audio File", "Image", "Translation", "New Words"])
-
+    output_csv = os.path.join("data", f"anki_sentences_{EPISODE_NAME}.csv")
+    save_to_csv(data, output_csv, columns=["Sentence", "Romanji", "Kana", "Audio File", "Image", "Translation", "New Words"])
 
 if __name__ == "__main__":
     process_episode()
