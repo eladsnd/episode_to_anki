@@ -1,12 +1,7 @@
-import asyncio
-from googletrans.async_ import Translator
+from deep_translator import GoogleTranslator
 
-async def translate_text_async(text):
-    """Asynchronously translates a given Japanese sentence into English."""
-    translator = Translator()
-    translation = await translator.translate(text, src="ja", dest="en")
-    return translation.text
 
 def translate_text(text):
-    """Wrapper function to run the async translation in a synchronous context."""
-    return asyncio.run(translate_text_async(text))
+    """Translates a given Japanese sentence into English using Deep Translator."""
+    translator = GoogleTranslator(source="ja", target="en")
+    return translator.translate(text)

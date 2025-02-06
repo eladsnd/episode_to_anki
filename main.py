@@ -1,3 +1,4 @@
+from tqdm import tqdm  # Import tqdm for progress bar
 import config
 
 from utils.sentence_orderer import extract_words
@@ -17,9 +18,10 @@ def process_episode():
     print("🔄 Ordering sentences for optimal learning...")
     ordered_sentences = order_sentences(sentences)
 
-    print("🎵 Extracting audio and images...")
+    print("🎵 Extracting audio, images, and translations...")
+
     data = []
-    for i, sentence in enumerate(ordered_sentences):
+    for i, sentence in tqdm(enumerate(ordered_sentences), total=len(ordered_sentences), desc="Processing Sentences"):
         audio_file = extract_audio_clip(config.EPISODE_FILE, sentence["start_time"], sentence["end_time"], i)
         image_file = extract_image_frame(config.EPISODE_FILE, (sentence["start_time"] + sentence["end_time"]) / 2, i)
         translation = translate_text(sentence["text"])
